@@ -1,0 +1,230 @@
+package sudokucui;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.Scanner;
+
+/**
+ * @author Jason Vainikolo, Matthew Townshend
+ * @StudentID 16961397, 17995114
+ */
+public class SudokuCUI {
+
+    private ReadDataFile aFile;
+    private String startGame = "", userAnswerString = "";
+    private int userAnswerNum = 0, column = 0, row = 0;
+    private int counter = 0;
+    private boolean endGame = false;
+    private boolean validStart = false;
+    private String[][] randomGame;
+    private String[][] answer;
+
+    Scanner read = new Scanner(System.in);
+
+    public SudokuCUI() throws IOException {
+
+
+        //Displays starting page of the game
+        this.aFile = new ReadDataFile();
+        System.out.print("> ");
+        this.startGame = read.nextLine();
+
+        while (!this.validStart) {
+            if (this.startGame.equalsIgnoreCase("yes")) {
+                this.validStart = true;
+
+                //Creates a randomised Sudoku game from a solve-able Grid
+                this.setRandomGame(this.getAnswer());
+
+                //Displays sudoku Grid with randomised removals
+                this.sudokuGrid();
+
+                //Loops till Game ends by winning or exiting
+                while (this.endGame == false) {
+                    //Calling Column and Row method
+                    this.setColumn();
+                    this.setRow();
+
+                    //checking if co'ordinates has no number
+                    this.isFree();
+
+                    //Displays updated grid
+                    this.sudokuGrid();
+
+                    //check if all squares are filled with answers
+                    this.counter = 0;
+                    for (String[] i : this.getRandomGame()) {
+                        for (String j : i) {
+                            if (j != " ") {
+                                this.counter++;
+                            }
+                        }
+                    }
+
+                    //end game if all squares are filled
+                    if (this.counter == 81) {
+                        System.out.println("Congratulations! You Won!");
+                        this.endGame = true;
+                    }
+
+                    //Constantly update the saved File of the grid
+                    this.aFile.saveFile(this.getRandomGame());
+                }
+            } else if (this.startGame.equalsIgnoreCase("no")) //Exits Game if user enters no
+            {
+                System.out.println("Exiting Game...");
+                try {
+                    Thread.sleep(1000); //for buffering effect before killing the code
+                } catch (Exception e) {
+                }
+                System.exit(0);
+            } else {
+                //for when user has entered an invalid input
+                System.out.println("Please enter either yes or no ");
+                this.startGame = read.nextLine();
+            }
+        }
+    }
+
+    public void sudokuGrid() {
+        //Displays sudoku grid
+        System.out.println("\n");
+        System.out.println("-1--2--3--4--5--6--7--8--9- ");
+        System.out.println(Arrays.deepToString(this.getRandomGame()).replace("2], ", "2] 1\n").replace("8], ", "8] 2\n")
+                .replace("7], ", "7] 3\n").replace("3], ", "3] 4\n").replace("1], ", "1] 5\n").replace("6], ", "6] 6\n")
+                .replace("4], ", "4] 7\n").replace("5], ", "5] 8\n").replace("[[", "[").replace("]]", "] 9"));
+    }
+
+    public String[][] getAnswer() {
+
+        //Solve-able Sudoku Game
+        String[][] answer
+                = {{"5", "3", "4", "6", "7", "8", "9", "1", "2"},
+                {"6", "7", "2", "1", "9", "5", "3", "4", "8"},
+                {"1", "9", "8", "3", "4", "2", "5", "6", "7"},
+                {"8", "5", "9", "7", "6", "1", "4", "2", "3"},
+                {"4", "2", "6", "8", "5", "3", "7", "9", "1"},
+                {"7", "1", "3", "9", "2", "4", "8", "5", "6"},
+                {"9", "6", "1", "5", "3", "7", "2", "8", "4"},
+                {"2", "8", "7", "4", "1", "9", "6", "3", "5"},
+                {"3", "4", "5", "2", "8", "6", "1", "7", "9"}};
+
+        return answer;
+    }
+
+    /*
+     *method for checking if the co'ordinates the user has entered is free
+     *to enter
+     */
+    public void isFree() {
+//        Scanner read = new Scanner(System.in);
+
+        //checks if answer already exist
+        if (this.getRandomGame()[this.getRow()][this.getColumn()] == this.getAnswer()[this.getRow()][this.getColumn()]) {
+            //Display answer already exist also Prompt user to re-enter x,y co'ordinates
+            System.out.println("Answer already exists");
+        } else {
+            //checks that the entered Value is between 1-9
+            do {
+                System.out.print("\nEnter Value: ");
+                while (!read.hasNextInt()) {
+                    System.out.println("\nInvalid Input!!");
+                    System.out.print("Enter Value: ");
+                    read.next();
+                }
+                this.userAnswerNum = read.nextInt();
+            } while (this.userAnswerNum > 9 || this.userAnswerNum < 1);
+
+            //parses the integer into a string
+            this.userAnswerString = Integer.toString(this.userAnswerNum);
+
+            //Display check message
+            if (this.userAnswerNum != Integer.valueOf(this.getAnswer()[this.getRow()][this.getColumn()])) {
+                System.out.println("Wrong Answer! ");
+            } else if (this.userAnswerNum == Integer.valueOf(this.getAnswer()[this.getRow()][this.getColumn()])) {
+                //replaces element in the array with the users answer
+                this.getRandomGame()[this.getRow()][this.getColumn()] = this.userAnswerString;
+                System.out.println("Right Answer! ");
+            }
+        }
+    }
+
+    //setColumn method for requesting column from user
+    public void setColumn() {
+//        Scanner read = new Scanner(System.in);
+
+        /*
+         *checks x-co'ordinate is between the bounds 1-9
+         *doesn't take non integer values
+         */
+        do {
+            System.out.print("\nEnter a Column Number: ");
+            while (!read.hasNextInt()) {
+                System.out.println("\nInvalid Input!!");
+                System.out.print("Enter a Column Number: ");
+                read.next();
+            }
+            this.column = read.nextInt() - 1;
+        } while (this.column > 8 || this.column < 0);
+
+    }
+
+    /*
+     * getColumn Method
+     * @return column
+     */
+    public int getColumn() {
+        return this.column;
+    }
+
+    //setColumn method for requesting column from user
+    public void setRow() {
+//        Scanner read = new Scanner(System.in);
+
+        /*
+         *checks y-co'ordinate is between the bounds 1-9
+         *doesn't take non integer values
+         */
+        do {
+            System.out.print("Enter a Row Number: ");
+            while (!read.hasNextInt()) {
+                System.out.println("\nInvalid Input!!");
+                System.out.print("Enter a Row Number: ");
+                read.next();
+            }
+            this.row = read.nextInt() - 1;
+        } while (this.row > 8 || this.row < 0);
+
+    }
+
+    /*
+     * getRow Method
+     * @return row
+     */
+    public int getRow() {
+        return this.row;
+    }
+
+    //for creating a random Sudoku Game using a Solve-able Sudoku Grid
+    public void setRandomGame(String[][] randomGame) {
+        //remove random number(s) in sudoku solution to generate game
+        for (int i = 0; i <= 15; i++) {
+            randomGame[(new Random()).nextInt(8)][(new Random()).nextInt(8)] = " ";
+        }
+
+        this.randomGame = randomGame;
+    }
+
+    /*
+     * getRandomGame Method
+     * @return randomGame
+     */    public String[][] getRandomGame() {
+        return this.randomGame;
+    }
+
+    //Point of Entry
+    public static void main(String[] args) throws IOException {
+        new SudokuCUI();
+    }
+}
